@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Offline Voice-to-QR Generator</title>
+  <style>
+    :root {
+      --bg-outer: #e2e8f0;
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f1f5f9;
+      --bg-input: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --danger-soft: rgba(220, 38, 38, 0.14);
+      --shadow-card: 0 12px 32px -8px rgba(15, 23, 42, 0.1);
+      --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    html[data-theme="dark"] {
+      --bg-outer: #030712;
+      --bg-primary: #090d16;
+      --bg-surface: #111827;
+      --bg-elevated: #1e293b;
+      --bg-input: #0f172a;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-soft: rgba(59, 130, 246, 0.18);
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --danger-soft: rgba(239, 68, 68, 0.2);
+      --shadow-card: 0 16px 40px -8px rgba(0, 0, 0, 0.55);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-outer);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Always Mobile View Wrapper — Fixed Viewport, Zero Scrolling */
+    .mobile-shell {
+      width: 100%;
+      max-width: 412px;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-primary);
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+      contain: layout size;
+    }
+
+    /* Top Bar — Strictly Inline Format Code, Theme Switch, Format Rule Toggle, APK/Offline */
+    .top-bar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.55rem 0.65rem;
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .top-controls-inline {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      width: 100%;
+    }
+
+    /* Format Code Changer Inline */
+    .format-box {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      height: 38px;
+      padding: 0 0.4rem 0 0.55rem;
+      gap: 0.35rem;
+      transition: opacity 0.2s ease, border-color 0.2s ease;
+    }
+
+    .format-box.disabled {
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    .format-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .format-input {
+      width: 100%;
+      max-width: 86px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 7px;
+      padding: 0.22rem 0.3rem;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 0.05em;
+      outline: none;
+    }
+
+    .format-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-icon {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.08s ease;
+    }
+
+    .btn-icon:hover,
+    .btn-icon.active-tool {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .btn-icon.active-rule {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .btn-icon.inactive-rule {
+      border-color: var(--border-color);
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+    }
+
+    .btn-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-icon svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Small badge dot on rule toggle */
+    .rule-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .btn-icon.inactive-rule .rule-dot {
+      background: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    /* Main Centered QR Area — Fits Strictly Without Scrolling */
+    .main-stage {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 0.9rem;
+      width: 100%;
+      gap: 0.85rem;
+      overflow: hidden;
+    }
+
+    .qr-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 0.95rem;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      text-align: center;
+      flex-shrink: 1;
+      min-height: 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .status-badge.listening {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .status-badge.listening .pulse-dot {
+      background: var(--danger);
+      animation: pulseAnim 1.1s infinite ease-in-out;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.45); opacity: 0.45; }
+    }
+
+    /* QR Stage Row: Keeps QR Code Strictly Centered & Places Scanner/Edit Icons on Right Center */
+    .qr-stage-row {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Strictly Square Centered QR Frame — Unchanged Position & Size */
+    .qr-square-wrapper {
+      width: min(220px, 38dvh, 64vw);
+      height: min(220px, 38dvh, 64vw);
+      aspect-ratio: 1 / 1;
+      background: #ffffff;
+      border: 3px solid var(--border-color);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #qrCanvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    /* Right-Center Action Icons Beside QR Code (Without Shifting QR Area) */
+    .qr-side-actions {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      z-index: 5;
+    }
+
+    .code-readout {
+      margin-top: 0.7rem;
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 11px;
+      padding: 0.5rem 0.65rem;
+      flex-shrink: 0;
+    }
+
+    .code-readout-label {
+      font-size: 0.63rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.15rem;
+    }
+
+    .code-readout-value {
+      font-family: "JetBrains Mono", "Courier New", monospace;
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--accent);
+      word-break: break-all;
+      letter-spacing: 0.03em;
+    }
+
+    .code-readout-value.hidden {
+      display: none;
+    }
+
+    /* Live Edit Input Inside Code Readout (Format Code Irrespective) */
+    .live-edit-input {
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      border-radius: 7px;
+      padding: 0.25rem 0.45rem;
+      font-family: "JetBrains Mono", "Courier New", monospace;
+      font-size: 0.94rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 0.03em;
+      outline: none;
+    }
+
+    .live-edit-input.hidden {
+      display: none;
+    }
+
+    .spoken-transcript {
+      margin-top: 0.3rem;
+      font-size: 0.73rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Voice Toggle Control Area */
+    .voice-dock {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .voice-toggle-btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 0.88rem 1.1rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.45);
+      transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+    }
+
+    .voice-toggle-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .voice-toggle-btn:active {
+      transform: scale(0.98);
+    }
+
+    .voice-toggle-btn.active {
+      background: var(--danger);
+      box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.5);
+    }
+
+    .voice-toggle-btn.active:hover {
+      background: var(--danger-hover);
+    }
+
+    .voice-toggle-btn svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Modals (Scanner & APK Guide) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.76);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .modal-backdrop.hidden {
+      display: none;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.15rem;
+      width: 100%;
+      max-width: 350px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .modal-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .modal-desc {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Scanner Video Viewport */
+    .scanner-video-box {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #000000;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 0.75rem;
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #scannerVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .scan-laser {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: scanSweep 1.8s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes scanSweep {
+      0%, 100% { top: 18%; }
+      50% { top: 82%; }
+    }
+
+    .scan-fallback-row {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .scan-fallback-input {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.8rem;
+      font-family: "JetBrains Mono", "Courier New", monospace;
+      outline: none;
+    }
+
+    .scan-fallback-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-primary-sm {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-secondary-sm {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 0.9rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text-primary);
+      color: var(--bg-surface);
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.15s ease;
+      z-index: 60;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-shell">
+    <!-- Top Header Bar: Inline Format Code, Theme Switch, Format Rule Toggle, APK/Offline -->
+    <header class="top-bar">
+      <div class="top-controls-inline">
+        <div id="topFormatBox" class="format-box" title="Default Format Code">
+          <label for="topFormatInput" class="format-label">Format Code</label>
+          <input
+            id="topFormatInput"
+            class="format-input"
+            type="text"
+            value="MRTN"
+            maxlength="16"
+            aria-label="Format Code"
+          />
+        </div>
+
+        <!-- Theme Switch Icon Button -->
+        <button
+          type="button"
+          id="themeToggleBtn"
+          class="btn-icon"
+          title="Switch Theme (Auto / Dark / Light)"
+          aria-label="Switch Theme"
+        >
+          <span id="themeIconHolder" style="display:flex;align-items:center;justify-content:center;"></span>
+        </button>
+
+        <!-- Format Rules Mode Toggle Button (Right of Theme Switch with Same UI) -->
+        <button
+          type="button"
+          id="formatModeToggleBtn"
+          class="btn-icon active-rule"
+          title="Format Rules Mode (ON: MRTN Rules / OFF: Exact Speech)"
+          aria-label="Toggle Format Rules vs Exact Speech"
+        >
+          <span id="ruleIconHolder" style="display:flex;align-items:center;justify-content:center;"></span>
+          <span class="rule-dot"></span>
+        </button>
+
+        <!-- APK / Offline Guide Icon Button -->
+        <button
+          type="button"
+          id="openApkGuideBtn"
+          class="btn-icon"
+          title="Android Offline & APK Guide"
+          aria-label="Android Offline and APK Guide"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            <path d="M12 7v6"></path>
+            <path d="M9.5 10.5L12 13l2.5-2.5"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Centered Mobile Stage: Square QR Code + Right-Center Scanner/Edit Icons + Voice Button -->
+    <main class="main-stage">
+      <section class="qr-card" aria-label="Centered Square QR Code">
+        <div id="receiverStatusBadge" class="status-badge">
+          <span class="pulse-dot"></span>
+          <span id="receiverStatusText">Voice Receiver Stopped (Last QR Active)</span>
+        </div>
+
+        <!-- QR Stage Row: Centered Square QR + Right-Center Icon Buttons -->
+        <div class="qr-stage-row">
+          <div class="qr-square-wrapper">
+            <canvas id="qrCanvas" width="280" height="280"></canvas>
+          </div>
+
+          <div class="qr-side-actions" aria-label="Scanner and Edit Tools">
+            <!-- Scanner Icon Button -->
+            <button
+              type="button"
+              id="scannerBtn"
+              class="btn-icon"
+              title="Scan QR or Barcode"
+              aria-label="Scan QR or Barcode"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                <line x1="7" y1="12" x2="17" y2="12"></line>
+                <line x1="7" y1="8" x2="10" y2="8"></line>
+                <line x1="14" y1="8" x2="17" y2="8"></line>
+                <line x1="7" y1="16" x2="12" y2="16"></line>
+                <line x1="15" y1="16" x2="17" y2="16"></line>
+              </svg>
+            </button>
+
+            <!-- Edit Icon Button -->
+            <button
+              type="button"
+              id="editResponseBtn"
+              class="btn-icon"
+              title="Edit Present QR Text Live"
+              aria-label="Edit Present QR Text Live"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="code-readout">
+          <div class="code-readout-label">Active QR Code</div>
+          <div id="formattedCodeDisplay" class="code-readout-value">MRTN-E-1-F-2-FRONT</div>
+          <input
+            id="liveEditInput"
+            class="live-edit-input hidden"
+            type="text"
+            value="MRTN-E-1-F-2-FRONT"
+            aria-label="Live Edit QR Code Text"
+          />
+          <div id="spokenTranscriptDisplay" class="spoken-transcript">
+            Last command: "E 1 F 2 front"
+          </div>
+        </div>
+      </section>
+
+      <!-- Single Button to Activate & Stop Voice Receiver -->
+      <section class="voice-dock" aria-label="Voice Receiver Control">
+        <button type="button" id="voiceToggleBtn" class="voice-toggle-btn">
+          <span id="voiceBtnIcon" style="display:flex;align-items:center;"></span>
+          <span id="voiceBtnLabel">Start Voice Receiver</span>
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <!-- QR & Barcode Scanner Modal (Auto-Stops After Read, Format Code Not Needed) -->
+  <div id="scannerModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="scannerModalTitle">
+    <div class="modal-box">
+      <div class="modal-title" id="scannerModalTitle">Scan QR or Barcode</div>
+      <p class="modal-desc">
+        Point your camera at any QR code or barcode (e.g. <code>XD-JSNSUS7727JS-3</code>). Scanning stops automatically upon read.
+      </p>
+      <div class="scanner-video-box">
+        <video id="scannerVideo" playsinline muted></video>
+        <div class="scan-laser"></div>
+      </div>
+      <div class="scan-fallback-row">
+        <input
+          id="barcodeWedgeInput"
+          class="scan-fallback-input"
+          type="text"
+          placeholder="Or scan/paste barcode (e.g. XD-JSNSUS7727JS-3)"
+          aria-label="Barcode or QR text input"
+        />
+        <button type="button" id="applyScannedTextBtn" class="btn-primary-sm">Read</button>
+      </div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="button" id="closeScannerModalBtn" class="btn-secondary-sm" style="width:100%;">Stop &amp; Close Scanner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Android Offline / APK Info Modal -->
+  <div id="apkModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="apkModalTitle">
+    <div class="modal-box">
+      <div class="modal-title" id="apkModalTitle">Android Offline &amp; APK Setup</div>
+      <p class="modal-desc">
+        This app runs 100% offline with an embedded QR generator:
+      </p>
+      <ul style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; padding-left: 1.1rem; margin-bottom: 0.9rem;">
+        <li><strong>Install on Android:</strong> Open in Chrome on Android and tap <strong>⋮ → Add to Home screen</strong>.</li>
+        <li><strong>Offline Voice Recognition:</strong> In Android Settings → <em>Languages &amp; Input → On-device speech recognition</em>, download English for Airplane Mode use.</li>
+        <li><strong>Export Native APK:</strong> Place this file in <code>app/src/main/assets/index.html</code> inside an Android WebView project.</li>
+      </ul>
+      <div style="display:flex; gap:0.5rem;">
+        <button type="button" id="downloadHtmlBtn" class="btn-primary-sm" style="flex:1;">Download Offline App</button>
+        <button type="button" id="closeApkModalBtn" class="btn-secondary-sm">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastMsg" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      // =========================================================================
+      // 1. FAST ZERO-ALLOCATION OFFLINE ISO/IEC 18004 QR CODE ENGINE
+      // =========================================================================
+      const EXP = new Uint8Array(512);
+      const LOG = new Uint8Array(256);
+      let gfX = 1;
+      for (let i = 0; i < 255; i++) {
+        EXP[i] = gfX;
+        LOG[gfX] = i;
+        gfX <<= 1;
+        if (gfX & 0x100) gfX ^= 0x11d;
+      }
+      for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+
+      const gfMul = function (a, b) {
+        return a === 0 || b === 0 ? 0 : EXP[LOG[a] + LOG[b]];
+      };
+
+      const QR_VERSIONS = [
+        null,
+        { v: 1, data: 19, ec: 7, align: [] },
+        { v: 2, data: 34, ec: 10, align: [6, 18] },
+        { v: 3, data: 55, ec: 15, align: [6, 22] },
+        { v: 4, data: 80, ec: 20, align: [6, 26] },
+        { v: 5, data: 108, ec: 26, align: [6, 30] }
+      ];
+
+      const RS_GEN = {};
+      [7, 10, 15, 20, 26].forEach(function (deg) {
+        let gen = [1];
+        for (let i = 0; i < deg; i++) {
+          const next = new Array(gen.length + 1).fill(0);
+          for (let j = 0; j < gen.length; j++) {
+            next[j] ^= gen[j];
+            next[j + 1] ^= gfMul(gen[j], EXP[i]);
+          }
+          gen = next;
+        }
+        RS_GEN[deg] = gen;
+      });
+
+      function generateQRMatrix(text) {
+        const utf8 = Array.from(new TextEncoder().encode(text || "MRTN"));
+        let ver = QR_VERSIONS[5];
+        for (let i = 1; i <= 5; i++) {
+          if (utf8.length + 2 <= QR_VERSIONS[i].data) {
+            ver = QR_VERSIONS[i];
+            break;
+          }
+        }
+        const V = ver.v;
+        const size = 17 + V * 4;
+
+        const bits = [];
+        const pushBits = function (val, len) {
+          for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
+        };
+        pushBits(0b0100, 4);
+        const safeBytes = utf8.slice(0, ver.data - 2);
+        pushBits(safeBytes.length, 8);
+        for (let i = 0; i < safeBytes.length; i++) pushBits(safeBytes[i], 8);
+
+        const maxBits = ver.data * 8;
+        pushBits(0, Math.min(4, maxBits - bits.length));
+        while (bits.length % 8 !== 0) bits.push(0);
+        const padBytes = [0xec, 0x11];
+        let padIdx = 0;
+        while (bits.length < maxBits) {
+          pushBits(padBytes[padIdx % 2], 8);
+          padIdx++;
+        }
+
+        const dataWords = new Array(ver.data);
+        for (let i = 0; i < bits.length; i += 8) {
+          let b = 0;
+          for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+          dataWords[i >> 3] = b;
+        }
+
+        const gen = RS_GEN[ver.ec];
+        const msg = dataWords.concat(new Array(ver.ec).fill(0));
+        for (let i = 0; i < dataWords.length; i++) {
+          const coef = msg[i];
+          if (coef !== 0) {
+            for (let j = 0; j < gen.length; j++) {
+              msg[i + j] ^= gfMul(gen[j], coef);
+            }
+          }
+        }
+
+        const ecWords = msg.slice(dataWords.length);
+        const allWords = dataWords.concat(ecWords);
+        const allBits = [];
+        for (let i = 0; i < allWords.length; i++) {
+          for (let b = 7; b >= 0; b--) allBits.push((allWords[i] >> b) & 1);
+        }
+
+        const mat = Array.from({ length: size }, function () {
+          return new Uint8Array(size);
+        });
+        const isFunc = Array.from({ length: size }, function () {
+          return new Uint8Array(size);
+        });
+
+        const setFunc = function (r, c, val) {
+          if (r >= 0 && r < size && c >= 0 && c < size) {
+            mat[r][c] = val ? 1 : 0;
+            isFunc[r][c] = 1;
+          }
+        };
+
+        const drawFinder = function (r0, c0) {
+          for (let dr = -1; dr <= 7; dr++) {
+            for (let dc = -1; dc <= 7; dc++) {
+              const inside = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6;
+              const border = dr === 0 || dr === 6 || dc === 0 || dc === 6;
+              const center = dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4;
+              setFunc(r0 + dr, c0 + dc, inside && (border || center));
+            }
+          }
+        };
+        drawFinder(0, 0);
+        drawFinder(0, size - 7);
+        drawFinder(size - 7, 0);
+
+        for (let i = 8; i < size - 8; i++) {
+          setFunc(6, i, i % 2 === 0);
+          setFunc(i, 6, i % 2 === 0);
+        }
+
+        const ac = ver.align;
+        for (let ri = 0; ri < ac.length; ri++) {
+          for (let ci = 0; ci < ac.length; ci++) {
+            const r = ac[ri];
+            const c = ac[ci];
+            if (
+              (r === 6 && c === 6) ||
+              (r === 6 && c === size - 7) ||
+              (r === size - 7 && c === 6)
+            )
+              continue;
+            for (let dr = -2; dr <= 2; dr++) {
+              for (let dc = -2; dc <= 2; dc++) {
+                const v = Math.max(Math.abs(dr), Math.abs(dc));
+                setFunc(r + dr, c + dc, v !== 1);
+              }
+            }
+          }
+        }
+
+        for (let i = 0; i < 9; i++) {
+          if (!isFunc[8][i]) setFunc(8, i, false);
+          if (!isFunc[i][8]) setFunc(i, 8, false);
+        }
+        for (let i = 0; i < 8; i++) {
+          if (!isFunc[8][size - 1 - i]) setFunc(8, size - 1 - i, false);
+          if (!isFunc[size - 1 - i][8]) setFunc(size - 1 - i, 8, false);
+        }
+        setFunc(size - 8, 8, true);
+
+        let bitIdx = 0;
+        let up = true;
+        for (let right = size - 1; right >= 1; right -= 2) {
+          if (right === 6) right = 5;
+          for (let vert = 0; vert < size; vert++) {
+            const r = up ? size - 1 - vert : vert;
+            for (let j = 0; j < 2; j++) {
+              const c = right - j;
+              if (!isFunc[r][c]) {
+                const bit = bitIdx < allBits.length ? allBits[bitIdx++] : 0;
+                mat[r][c] = bit ^ ((r + c) % 2 === 0 ? 1 : 0);
+              }
+            }
+          }
+          up = !up;
+        }
+
+        const fmt = 0x77c4;
+        for (let i = 0; i <= 5; i++) setFunc(8, i, (fmt >> (14 - i)) & 1);
+        setFunc(8, 7, (fmt >> 8) & 1);
+        setFunc(8, 8, (fmt >> 7) & 1);
+        setFunc(7, 8, (fmt >> 6) & 1);
+        for (let i = 9; i < 15; i++) setFunc(14 - i, 8, (fmt >> (14 - i)) & 1);
+
+        for (let i = 0; i < 8; i++) setFunc(8, size - 1 - i, (fmt >> i) & 1);
+        for (let i = 8; i < 15; i++) setFunc(size - 15 + i, 8, (fmt >> i) & 1);
+
+        return mat;
+      }
+
+      let lastRenderedPayload = "";
+      function renderQRToCanvas(canvas, text) {
+        if (text === lastRenderedPayload) return;
+        lastRenderedPayload = text;
+
+        const mat = generateQRMatrix(text);
+        const quietZone = 2;
+        const totalModules = mat.length + quietZone * 2;
+        const sizePx = 280;
+        canvas.width = sizePx;
+        canvas.height = sizePx;
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, sizePx, sizePx);
+
+        const scale = sizePx / totalModules;
+        ctx.fillStyle = "#000000";
+        for (let r = 0; r < mat.length; r++) {
+          for (let c = 0; c < mat.length; c++) {
+            if (mat[r][c]) {
+              const x = Math.floor((c + quietZone) * scale);
+              const y = Math.floor((r + quietZone) * scale);
+              const w = Math.ceil((c + quietZone + 1) * scale) - x;
+              const h = Math.ceil((r + quietZone + 1) * scale) - y;
+              ctx.fillRect(x, y, w, h);
+            }
+          }
+        }
+      }
+
+      // =========================================================================
+      // 2. SMART VOICE LIMITATIONS & FAST PREDICTOR ENGINE
+      // =========================================================================
+      const NUM_WORDS = {
+        ZERO: 0, ONE: 1, WON: 1, TWO: 2, TO: 2, TOO: 2,
+        THREE: 3, TREE: 3, FOUR: 4, FOR: 4, FORE: 4,
+        FIVE: 5, SIX: 6, SEVEN: 7, EIGHT: 8, ATE: 8,
+        NINE: 9, TEN: 10, ELEVEN: 11, TWELVE: 12,
+        THIRTEEN: 13, FOURTEEN: 14, FIFTEEN: 15, SIXTEEN: 16,
+        SEVENTEEN: 17, EIGHTEEN: 18, NINETEEN: 19,
+        TWENTY: 20, THIRTY: 30, FORTY: 40, FIFTY: 50
+      };
+
+      const LETTER_MAP = {
+        A: "A", AY: "A", ALPHA: "A", EH: "A",
+        B: "B", BE: "B", BEE: "B", BRAVO: "B",
+        C: "C", SEE: "C", SEA: "C", SI: "C", CHARLIE: "C", CE: "C",
+        D: "D", DEE: "D", THE: "D", DELTA: "D",
+        E: "E", EE: "E", ECHO: "E",
+        F: "F", EF: "F", EFF: "F", FOXTROT: "F",
+        G: "G", GEE: "G", JI: "G", GOLF: "G",
+        H: "H", AITCH: "H", HOTEL: "H",
+        I: "I", EYE: "I", AYE: "I", INDIA: "I",
+        J: "J", JAY: "J", JULIET: "J",
+        K: "K", KAY: "K", KILO: "K",
+        L: "L", EL: "L", ELL: "L", LIMA: "L"
+      };
+
+      function parseNumber(tok) {
+        if (/^\d+$/.test(tok)) return parseInt(tok, 10);
+        const u = tok.toUpperCase();
+        return NUM_WORDS[u] !== undefined ? NUM_WORDS[u] : null;
+      }
+
+      function parseTokens(raw) {
+        if (!raw) return [];
+        const separated = raw
+          .replace(/([a-zA-Z]+)(\d+)/g, "$1 $2")
+          .replace(/(\d+)([a-zA-Z]+)/g, "$1 $2")
+          .replace(/[^a-zA-Z0-9]+/g, " ")
+          .trim();
+        if (!separated) return [];
+        const rawTokens = separated.split(/\s+/).map(function (t) {
+          return t.toUpperCase();
+        });
+
+        const tokens = [];
+        for (let i = 0; i < rawTokens.length; i++) {
+          const cur = rawTokens[i];
+          const next = rawTokens[i + 1];
+          if (
+            (cur === "TWENTY" || cur === "THIRTY" || cur === "FORTY" || cur === "FIFTY") &&
+            next &&
+            NUM_WORDS[next] &&
+            NUM_WORDS[next] < 10
+          ) {
+            tokens.push(String(NUM_WORDS[cur] + NUM_WORDS[next]));
+            i++;
+          } else {
+            tokens.push(cur);
+          }
+        }
+        return tokens;
+      }
+
+      function formatVoiceCommandWithLimitations(formatCode, rawCommand) {
+        const cleanPrefix = (formatCode || "MRTN")
+          .trim()
+          .toUpperCase()
+          .replace(/[^A-Z0-9-]/g, "") || "MRTN";
+
+        const tokens = parseTokens(rawCommand);
+        if (tokens.length === 0) return cleanPrefix;
+
+        let startIdx = 0;
+        if (tokens[0] === cleanPrefix) startIdx = 1;
+        const remaining = tokens.slice(startIdx);
+        if (remaining.length === 0) return cleanPrefix;
+
+        let slot1 = null;
+        let slot2 = null;
+        let slot3 = null;
+        let slot4 = null;
+        let slot5 = null;
+
+        let idx = 0;
+
+        if (idx < remaining.length) {
+          const t = remaining[idx];
+          const letter = LETTER_MAP[t] || (t.length === 1 && t >= "A" && t <= "I" ? t : null);
+          if (letter && letter >= "A" && letter <= "I") {
+            slot1 = letter;
+            idx++;
+          }
+        }
+
+        if (idx < remaining.length) {
+          const num = parseNumber(remaining[idx]);
+          if (num !== null && num >= 1 && num <= 55) {
+            slot2 = num;
+            idx++;
+          }
+        }
+
+        for (let j = idx; j < remaining.length; j++) {
+          const t = remaining[j];
+          if (/^(FRONT|PRINT|FRNT|FONT|FROND|FRO|FRONTS)$/.test(t)) {
+            slot5 = "FRONT";
+            remaining.splice(j, 1);
+            break;
+          } else if (/^(BACK|PACK|BAG|BAK|BECK|BACKED|BLACK)$/.test(t)) {
+            slot5 = "BACK";
+            remaining.splice(j, 1);
+            break;
+          }
+        }
+
+        if (idx < remaining.length) {
+          const t = remaining[idx];
+          const letter = LETTER_MAP[t] || (t.length === 1 && t >= "A" && t <= "L" ? t : null);
+          if (letter && letter >= "A" && letter <= "L") {
+            slot3 = letter;
+            idx++;
+          }
+        }
+
+        if (idx < remaining.length) {
+          const num = parseNumber(remaining[idx]);
+          if (num !== null && num >= 1 && num <= 7) {
+            slot4 = num;
+            idx++;
+          }
+        }
+
+        if (slot1 !== null && slot2 !== null) {
+          const parts = [cleanPrefix, slot1, slot2];
+          if (slot3 !== null && slot4 !== null) {
+            parts.push(slot3, slot4);
+          } else if (slot3 !== null) {
+            parts.push(slot3);
+          }
+          if (slot5 !== null) {
+            parts.push(slot5);
+          }
+          return parts.join("-");
+        }
+
+        const fallbackTokens = remaining.map(function (t) {
+          if (/^(FRONT|PRINT|FRNT|FONT|FROND|FRO|FRONTS)$/.test(t)) return "FRONT";
+          if (/^(BACK|PACK|BAG|BAK|BECK|BACKED|BLACK)$/.test(t)) return "BACK";
+          if (LETTER_MAP[t]) return LETTER_MAP[t];
+          const n = parseNumber(t);
+          return n !== null ? String(n) : t;
+        });
+        return cleanPrefix + "-" + fallbackTokens.join("-");
+      }
+
+      // =========================================================================
+      // 3. APP STATE & LOW-RESOURCE EVENT LIFECYCLE
+      // =========================================================================
+      let state = {
+        formatCode: "MRTN",
+        lastCommand: "E 1 F 2 front",
+        formattedPayload: "MRTN-E-1-F-2-FRONT",
+        sourceMode: "voice", // "voice" | "raw"
+        formatRulesEnabled: true, // ON by default (MRTN warehouse rules) / OFF (exact verbatim voice)
+        isListening: false,
+        isEditing: false,
+        isScanning: false,
+        themeMode: "auto"
+      };
+
+      const topFormatBox = document.getElementById("topFormatBox");
+      const topFormatInput = document.getElementById("topFormatInput");
+      const themeToggleBtn = document.getElementById("themeToggleBtn");
+      const themeIconHolder = document.getElementById("themeIconHolder");
+      const formatModeToggleBtn = document.getElementById("formatModeToggleBtn");
+      const ruleIconHolder = document.getElementById("ruleIconHolder");
+      const qrCanvas = document.getElementById("qrCanvas");
+      const formattedCodeDisplay = document.getElementById("formattedCodeDisplay");
+      const liveEditInput = document.getElementById("liveEditInput");
+      const spokenTranscriptDisplay = document.getElementById("spokenTranscriptDisplay");
+      const receiverStatusBadge = document.getElementById("receiverStatusBadge");
+      const receiverStatusText = document.getElementById("receiverStatusText");
+      const voiceToggleBtn = document.getElementById("voiceToggleBtn");
+      const voiceBtnIcon = document.getElementById("voiceBtnIcon");
+      const voiceBtnLabel = document.getElementById("voiceBtnLabel");
+      const scannerBtn = document.getElementById("scannerBtn");
+      const editResponseBtn = document.getElementById("editResponseBtn");
+      const scannerModal = document.getElementById("scannerModal");
+      const scannerVideo = document.getElementById("scannerVideo");
+      const barcodeWedgeInput = document.getElementById("barcodeWedgeInput");
+      const applyScannedTextBtn = document.getElementById("applyScannedTextBtn");
+      const closeScannerModalBtn = document.getElementById("closeScannerModalBtn");
+      const openApkGuideBtn = document.getElementById("openApkGuideBtn");
+      const apkModal = document.getElementById("apkModal");
+      const closeApkModalBtn = document.getElementById("closeApkModalBtn");
+      const downloadHtmlBtn = document.getElementById("downloadHtmlBtn");
+      const toastMsg = document.getElementById("toastMsg");
+
+      const ICONS = {
+        sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>',
+        moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>',
+        mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>',
+        stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" ry="2" fill="currentColor"></rect></svg>',
+        // Tag / Rule Mode Icon (When Format Rules Mode is ON)
+        rulesOn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',
+        // Exact Quotation / Verbatim Speech Icon (When Format Rules Mode is OFF)
+        rulesOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2 0 4-1.5 6-3 6"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2 0 4-1.5 6-3 6"></path></svg>'
+      };
+
+      let toastTimer = null;
+      function showToast(text) {
+        toastMsg.textContent = text;
+        toastMsg.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastMsg.classList.remove("show");
+        }, 1800);
+      }
+
+      // =========================================================================
+      // 4. DEVICE AUTO DARK/LIGHT THEME
+      // =========================================================================
+      const systemDarkQuery = window.matchMedia
+        ? window.matchMedia("(prefers-color-scheme: dark)")
+        : { matches: false, addEventListener: null };
+
+      function isCurrentlyDark() {
+        if (state.themeMode === "dark") return true;
+        if (state.themeMode === "light") return false;
+        return !!systemDarkQuery.matches;
+      }
+
+      function applyTheme() {
+        const effectiveDark = isCurrentlyDark();
+        document.documentElement.setAttribute(
+          "data-theme",
+          effectiveDark ? "dark" : "light"
+        );
+        themeIconHolder.innerHTML = effectiveDark ? ICONS.sun : ICONS.moon;
+      }
+
+      if (systemDarkQuery.addEventListener) {
+        systemDarkQuery.addEventListener("change", function () {
+          if (state.themeMode === "auto") applyTheme();
+        });
+      }
+
+      themeToggleBtn.addEventListener("click", function () {
+        const nextDark = !isCurrentlyDark();
+        state.themeMode = nextDark ? "dark" : "light";
+        applyTheme();
+        showToast(nextDark ? "Dark Mode" : "Light Mode");
+      });
+
+      // =========================================================================
+      // 5. FORMAT RULES TOGGLE (Default: ON / Off: Exact Verbatim Voice Command)
+      // =========================================================================
+      function updateFormatRuleUI() {
+        if (state.formatRulesEnabled) {
+          formatModeToggleBtn.classList.add("active-rule");
+          formatModeToggleBtn.classList.remove("inactive-rule");
+          formatModeToggleBtn.title = "Format Rules Mode (ON: MRTN Rules / Tap for Exact Speech)";
+          ruleIconHolder.innerHTML = ICONS.rulesOn;
+          topFormatBox.classList.remove("disabled");
+        } else {
+          formatModeToggleBtn.classList.remove("active-rule");
+          formatModeToggleBtn.classList.add("inactive-rule");
+          formatModeToggleBtn.title = "Exact Speech Mode (OFF: Raw Voice / Tap for MRTN Rules)";
+          ruleIconHolder.innerHTML = ICONS.rulesOff;
+          topFormatBox.classList.add("disabled");
+        }
+      }
+
+      formatModeToggleBtn.addEventListener("click", function () {
+        state.formatRulesEnabled = !state.formatRulesEnabled;
+        updateFormatRuleUI();
+        if (state.formatRulesEnabled) {
+          showToast("Format Rules Mode ON (MRTN format applied)");
+        } else {
+          showToast("Exact Voice Mode ON (Raw speech, no rules)");
+        }
+        if (state.sourceMode === "voice") {
+          updateQRFromState();
+        }
+      });
+
+      // =========================================================================
+      // 6. QR CODE RENDERING & FORMAT SYNCHRONIZATION
+      // =========================================================================
+      function updateQRFromState() {
+        if (state.sourceMode === "voice") {
+          if (state.formatRulesEnabled) {
+            // Rules ON: Apply Format Code + Warehouse Slot Limitations
+            state.formattedPayload = formatVoiceCommandWithLimitations(
+              state.formatCode,
+              state.lastCommand
+            );
+            spokenTranscriptDisplay.textContent = state.lastCommand
+              ? 'Last command: "' + state.lastCommand + '"'
+              : "Waiting for voice command...";
+          } else {
+            // Rules OFF: Exact verbatim voice command irrespective of format code & rules
+            state.formattedPayload = (state.lastCommand || "").trim() || "hi, how are you";
+            spokenTranscriptDisplay.textContent = state.lastCommand
+              ? 'Exact speech: "' + state.lastCommand + '"'
+              : "Waiting for exact voice command...";
+          }
+        }
+        formattedCodeDisplay.textContent = state.formattedPayload;
+        if (!state.isEditing) {
+          liveEditInput.value = state.formattedPayload;
+        }
+        renderQRToCanvas(qrCanvas, state.formattedPayload);
+      }
+
+      topFormatInput.addEventListener("input", function () {
+        const cleaned = topFormatInput.value
+          .toUpperCase()
+          .replace(/[^A-Z0-9-]/g, "");
+        topFormatInput.value = cleaned;
+        state.formatCode = cleaned || "MRTN";
+        if (state.sourceMode === "voice" && state.formatRulesEnabled) {
+          updateQRFromState();
+        }
+      });
+
+      topFormatInput.addEventListener("blur", function () {
+        if (!topFormatInput.value.trim()) {
+          state.formatCode = "MRTN";
+          topFormatInput.value = "MRTN";
+          if (state.sourceMode === "voice" && state.formatRulesEnabled) {
+            updateQRFromState();
+          }
+        }
+      });
+
+      // =========================================================================
+      // 7. EDIT BUTTON: LIVE EDIT PRESENT RESPONSE
+      // =========================================================================
+      function setEditMode(enabled) {
+        state.isEditing = enabled;
+        if (enabled) {
+          editResponseBtn.classList.add("active-tool");
+          formattedCodeDisplay.classList.add("hidden");
+          liveEditInput.classList.remove("hidden");
+          liveEditInput.value = state.formattedPayload;
+          liveEditInput.focus();
+          liveEditInput.select();
+          spokenTranscriptDisplay.textContent = "Live editing (Custom text)";
+        } else {
+          editResponseBtn.classList.remove("active-tool");
+          liveEditInput.classList.add("hidden");
+          formattedCodeDisplay.classList.remove("hidden");
+        }
+      }
+
+      editResponseBtn.addEventListener("click", function () {
+        setEditMode(!state.isEditing);
+      });
+
+      liveEditInput.addEventListener("input", function () {
+        const rawText = liveEditInput.value.trim();
+        state.sourceMode = "raw";
+        state.formattedPayload = rawText || "MRTN";
+        formattedCodeDisplay.textContent = state.formattedPayload;
+        spokenTranscriptDisplay.textContent =
+          'Edited response: "' + state.formattedPayload + '"';
+        renderQRToCanvas(qrCanvas, state.formattedPayload);
+      });
+
+      liveEditInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === "Escape") {
+          setEditMode(false);
+          showToast("Updated: " + state.formattedPayload);
+        }
+      });
+
+      // =========================================================================
+      // 8. LOW-BATTERY SCANNER (Immediate Hardware Release Upon Read/Close)
+      // =========================================================================
+      let cameraStream = null;
+      let scanTimerId = null;
+      let barcodeDetector = null;
+
+      if ("BarcodeDetector" in window) {
+        try {
+          barcodeDetector = new window.BarcodeDetector({
+            formats: [
+              "qr_code",
+              "code_128",
+              "code_39",
+              "code_93",
+              "ean_13",
+              "ean_8",
+              "upc_a",
+              "upc_e",
+              "itf",
+              "codabar",
+              "data_matrix",
+              "pdf417",
+              "aztec"
+            ]
+          });
+        } catch (e) {
+          try {
+            barcodeDetector = new window.BarcodeDetector();
+          } catch (err) {
+            barcodeDetector = null;
+          }
+        }
+      }
+
+      function handleScannedCode(rawScannedValue) {
+        const cleanVal = (rawScannedValue || "").trim();
+        if (!cleanVal) return;
+        stopScanner();
+        setEditMode(false);
+        state.sourceMode = "raw";
+        state.formattedPayload = cleanVal;
+        formattedCodeDisplay.textContent = cleanVal;
+        liveEditInput.value = cleanVal;
+        spokenTranscriptDisplay.textContent = 'Scanned code: "' + cleanVal + '"';
+        receiverStatusBadge.classList.remove("listening");
+        receiverStatusText.textContent = "Scanned Code Active (Raw Text)";
+        renderQRToCanvas(qrCanvas, cleanVal);
+        showToast("Scanned: " + cleanVal);
+      }
+
+      function stopScanner() {
+        state.isScanning = false;
+        scannerBtn.classList.remove("active-tool");
+        if (scanTimerId) {
+          clearTimeout(scanTimerId);
+          scanTimerId = null;
+        }
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+          cameraStream = null;
+        }
+        scannerVideo.srcObject = null;
+        scannerModal.classList.add("hidden");
+      }
+
+      function runScanCycle() {
+        if (!state.isScanning) return;
+        if (
+          barcodeDetector &&
+          scannerVideo.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA
+        ) {
+          barcodeDetector
+            .detect(scannerVideo)
+            .then(function (codes) {
+              if (codes && codes.length > 0 && codes[0].rawValue) {
+                handleScannedCode(codes[0].rawValue);
+                return;
+              }
+              if (state.isScanning) {
+                scanTimerId = setTimeout(runScanCycle, 110);
+              }
+            })
+            .catch(function () {
+              if (state.isScanning) {
+                scanTimerId = setTimeout(runScanCycle, 110);
+              }
+            });
+        } else if (state.isScanning) {
+          scanTimerId = setTimeout(runScanCycle, 110);
+        }
+      }
+
+      function startScanner() {
+        if (state.isListening && recognition) {
+          state.isListening = false;
+          try {
+            recognition.abort();
+          } catch (e) {}
+          updateVoiceUI();
+        }
+        setEditMode(false);
+        state.isScanning = true;
+        scannerBtn.classList.add("active-tool");
+        barcodeWedgeInput.value = "";
+        scannerModal.classList.remove("hidden");
+        setTimeout(function () {
+          barcodeWedgeInput.focus();
+        }, 50);
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices
+            .getUserMedia({
+              video: { facingMode: { ideal: "environment" } },
+              audio: false
+            })
+            .then(function (stream) {
+              if (!state.isScanning) {
+                stream.getTracks().forEach(function (t) {
+                  t.stop();
+                });
+                return;
+              }
+              cameraStream = stream;
+              scannerVideo.srcObject = stream;
+              scannerVideo.play().catch(function () {});
+              scanTimerId = setTimeout(runScanCycle, 110);
+            })
+            .catch(function () {
+              showToast("Use scanner input box or enable camera");
+            });
+        }
+      }
+
+      scannerBtn.addEventListener("click", function () {
+        if (state.isScanning) {
+          stopScanner();
+        } else {
+          startScanner();
+        }
+      });
+
+      closeScannerModalBtn.addEventListener("click", function () {
+        stopScanner();
+      });
+
+      applyScannedTextBtn.addEventListener("click", function () {
+        if (barcodeWedgeInput.value.trim()) {
+          handleScannedCode(barcodeWedgeInput.value.trim());
+        }
+      });
+
+      barcodeWedgeInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && barcodeWedgeInput.value.trim()) {
+          handleScannedCode(barcodeWedgeInput.value.trim());
+        }
+      });
+
+      // =========================================================================
+      // 9. LOW-RESOURCE SINGLE-COMMAND VOICE RECEIVER
+      // =========================================================================
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition || null;
+      let recognition = null;
+
+      function updateVoiceUI() {
+        if (state.isListening) {
+          voiceToggleBtn.classList.add("active");
+          voiceBtnIcon.innerHTML = ICONS.stop;
+          voiceBtnLabel.textContent = "Stop Voice Receiver";
+          receiverStatusBadge.classList.add("listening");
+          receiverStatusText.textContent = state.formatRulesEnabled
+            ? "Listening (Format Rules ON) — Speak Now"
+            : "Listening (Exact Voice ON) — Speak Now";
+        } else {
+          voiceToggleBtn.classList.remove("active");
+          voiceBtnIcon.innerHTML = ICONS.mic;
+          voiceBtnLabel.textContent = "Start Voice Receiver";
+          receiverStatusBadge.classList.remove("listening");
+          receiverStatusText.textContent =
+            "Voice Receiver Stopped (Last QR Active)";
+        }
+      }
+
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        recognition.onresult = function (event) {
+          let latestTranscript = "";
+          let gotFinalResult = false;
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            latestTranscript = event.results[i][0].transcript.trim();
+            if (event.results[i].isFinal) {
+              gotFinalResult = true;
+            }
+          }
+          if (latestTranscript) {
+            state.sourceMode = "voice";
+            state.lastCommand = latestTranscript;
+            updateQRFromState();
+          }
+          if (gotFinalResult) {
+            state.isListening = false;
+            updateVoiceUI();
+            try {
+              recognition.stop();
+            } catch (e) {}
+            showToast("Generated: " + state.formattedPayload);
+          }
+        };
+
+        recognition.onerror = function (event) {
+          state.isListening = false;
+          updateVoiceUI();
+          if (
+            event.error === "not-allowed" ||
+            event.error === "service-not-allowed"
+          ) {
+            showToast("Microphone permission required");
+          }
+        };
+
+        recognition.onend = function () {
+          if (state.isListening) {
+            state.isListening = false;
+            updateVoiceUI();
+          }
+        };
+      }
+
+      voiceToggleBtn.addEventListener("click", function () {
+        setEditMode(false);
+        state.isListening = !state.isListening;
+        updateVoiceUI();
+
+        if (state.isListening) {
+          if (recognition) {
+            try {
+              recognition.start();
+              showToast(
+                state.formatRulesEnabled
+                  ? "Listening (Format Rules Mode)..."
+                  : "Listening (Exact Speech Mode)..."
+              );
+            } catch (e) {}
+          } else {
+            showToast("Speech Recognition supported on Android Chrome");
+          }
+        } else {
+          if (recognition) {
+            try {
+              recognition.abort();
+            } catch (e) {}
+          }
+          showToast("Stopped — " + state.formattedPayload + " stays active");
+        }
+      });
+
+      // APK & Offline Modal
+      openApkGuideBtn.addEventListener("click", function () {
+        apkModal.classList.remove("hidden");
+      });
+
+      closeApkModalBtn.addEventListener("click", function () {
+        apkModal.classList.add("hidden");
+      });
+
+      downloadHtmlBtn.addEventListener("click", function () {
+        const htmlSource = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        const blob = new Blob([htmlSource], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Offline-Voice-QR-Generator.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Downloaded offline app!");
+      });
+
+      // Initialize App on Load
+      applyTheme();
+      updateFormatRuleUI();
+      updateQRFromState();
+      updateVoiceUI();
+    })();
+  </script>
+</body>
+</html>
