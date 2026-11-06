@@ -222,34 +222,132 @@
   }
 
   // =========================================================================
-  // 2. SMART VOICE LIMITATIONS & FAST PREDICTOR ENGINE
+  // 2. SMART VOICE LIMITATIONS & FAST PREDICTOR ENGINE (INDIAN ENGLISH TUNED)
   // =========================================================================
   const NUM_WORDS = {
-    ZERO: 0, ONE: 1, WON: 1, TWO: 2, TO: 2, TOO: 2,
-    THREE: 3, TREE: 3, FOUR: 4, FOR: 4, FORE: 4,
-    FIVE: 5, SIX: 6, SEVEN: 7, EIGHT: 8, ATE: 8,
-    NINE: 9, TEN: 10, ELEVEN: 11, TWELVE: 12,
-    THIRTEEN: 13, FOURTEEN: 14, FIFTEEN: 15, SIXTEEN: 16,
-    SEVENTEEN: 17, EIGHTEEN: 18, NINETEEN: 19,
-    TWENTY: 20, THIRTY: 30, FORTY: 40, FIFTY: 50
+    ZERO: 0, SHERO: 0, SIFAR: 0, NIL: 0, OH: 0, O: 0,
+    ONE: 1, WON: 1, WAN: 1, VAN: 1, ON: 1, FIRST: 1, "1ST": 1, SINGLE: 1, EK: 1,
+    TWO: 2, TO: 2, TOO: 2, TU: 2, DO: 2, DOO: 2, SECOND: 2, "2ND": 2, DOU: 2,
+    THREE: 3, TREE: 3, TRI: 3, FREE: 3, THEE: 3, TEA: 3, THIRD: 3, "3RD": 3, TEEN: 3,
+    FOUR: 4, FOR: 4, FORE: 4, POUR: 4, FOURTH: 4, "4TH": 4, CHAAR: 4, CHAR: 4,
+    FIVE: 5, FI: 5, FIV: 5, FAIV: 5, FIFTH: 5, "5TH": 5, PIPE: 5, FINE: 5, FIRE: 5, PAANCH: 5, PANCH: 5,
+    SIX: 6, SEX: 6, SIKS: 6, SIK: 6, SIXTH: 6, "6TH": 6, FIX: 6, CHE: 6, CHHA: 6,
+    SEVEN: 7, SEVAN: 7, SEVN: 7, SEVENTH: 7, "7TH": 7, HEAVEN: 7, SAAT: 7,
+    EIGHT: 8, ATE: 8, AIT: 8, EIGHTH: 8, "8TH": 8, HATE: 8, HEIGHT: 8, AATH: 8,
+    NINE: 9, NAIN: 9, NINTH: 9, "9TH": 9, LINE: 9, MINE: 9, NIGHT: 9, NAU: 9,
+    TEN: 10, TAN: 10, TENTH: 10, "10TH": 10, TIN: 10, DEN: 10, THEN: 10, DAS: 10,
+    ELEVEN: 11, ELVEN: 11, ILAVEN: 11, ELEVENTH: 11, "11TH": 11, LEVEL: 11, GYARAH: 11,
+    TWELVE: 12, TWELV: 12, TWELF: 12, TWELFTH: 12, "12TH": 12, BARAH: 12,
+    THIRTEEN: 13, THIRTEAN: 13, TARTIN: 13, THIRTEENTH: 13, "13TH": 13, TERAH: 13,
+    FOURTEEN: 14, FORTEAM: 14, FORTIN: 14, FOURTEENTH: 14, "14TH": 14, CHAUDAH: 14,
+    FIFTEEN: 15, FIFTEAN: 15, FIFTIN: 15, FIFTEENTH: 15, "15TH": 15, PANDRAH: 15,
+    SIXTEEN: 16, SIXTEAN: 16, SIXTIN: 16, SIXTEENTH: 16, "16TH": 16, SOLAH: 16,
+    SEVENTEEN: 17, SEVENTEAN: 17, SEVENTIN: 17, SEVENTEENTH: 17, "17TH": 17, SATRAH: 17,
+    EIGHTEEN: 18, EIGHTEAN: 18, EIGHTIN: 18, EIGHTEENTH: 18, "18TH": 18, ATETEEN: 18, ATTHARAH: 18,
+    NINETEEN: 19, NINETEAN: 19, NINETIN: 19, NINETEENTH: 19, "19TH": 19, UNNEES: 19,
+    TWENTY: 20, TWENTI: 20, TWENTE: 20, TWENTIETH: 20, "20TH": 20, BEES: 20,
+    THIRTY: 30, THIRTI: 30, THERTY: 30, THIRTIETH: 30, "30TH": 30, TEES: 30,
+    FORTY: 40, FOURTY: 40, FORTI: 40, FORTIETH: 40, "40TH": 40, CHAALEES: 40, CHALIS: 40,
+    FIFTY: 50, FIFTI: 50, FIFTIETH: 50, "50TH": 50, PACHAS: 50
   };
 
-  const LETTER_MAP = {
-    A: "A", AY: "A", ALPHA: "A", EH: "A",
-    B: "B", BE: "B", BEE: "B", BRAVO: "B",
-    C: "C", SEE: "C", SEA: "C", SI: "C", CHARLIE: "C", CE: "C",
-    D: "D", DEE: "D", THE: "D", DELTA: "D",
-    E: "E", EE: "E", ECHO: "E",
-    F: "F", EF: "F", EFF: "F", FOXTROT: "F",
-    G: "G", GEE: "G", JI: "G", GOLF: "G",
-    H: "H", AITCH: "H", HOTEL: "H",
-    I: "I", EYE: "I", AYE: "I", INDIA: "I",
-    J: "J", JAY: "J", JULIET: "J",
-    K: "K", KAY: "K", KILO: "K",
-    L: "L", EL: "L", ELL: "L", LIMA: "L"
+  // Populate compound numbers 21-55
+  (function () {
+    const tens = [
+      { p: "TWENTY", v: 20 },
+      { p: "THIRTY", v: 30 },
+      { p: "FORTY", v: 40 },
+      { p: "FOURTY", v: 40 },
+      { p: "FIFTY", v: 50 }
+    ];
+    const ones = [
+      { s: "ONE", v: 1 }, { s: "TWO", v: 2 }, { s: "THREE", v: 3 }, { s: "FOUR", v: 4 },
+      { s: "FIVE", v: 5 }, { s: "SIX", v: 6 }, { s: "SEVEN", v: 7 }, { s: "EIGHT", v: 8 }, { s: "NINE", v: 9 }
+    ];
+    tens.forEach(function (t) {
+      ones.forEach(function (o) {
+        const total = t.v + o.v;
+        if (total <= 55) {
+          NUM_WORDS[t.p + o.s] = total;
+          NUM_WORDS[t.p + "-" + o.s] = total;
+        }
+      });
+    });
+  })();
+
+  // Comprehensive letter homophone & Indian English pronunciation dictionary
+  const LETTER_MAP_SLOT1 = {
+    // A
+    A: "A", AY: "A", EH: "A", AE: "A", EI: "A", EY: "A", AA: "A", AI: "A",
+    AYE: "A", AYY: "A", YAY: "A", ALPHA: "A", APPLE: "A", HEY: "A", HAY: "A", ACE: "A", ABEL: "A", AN: "A",
+    // B
+    B: "B", BE: "B", BEE: "B", BEA: "B", BI: "B", BRAVO: "B", BALL: "B", BOY: "B",
+    VE: "B", VEE: "B", VI: "B", BHI: "B", PEA: "B", WE: "B",
+    // C
+    C: "C", SEE: "C", SEA: "C", SI: "C", SE: "C", CE: "C", CEE: "C", CHARLIE: "C",
+    CAT: "C", SHE: "C", SAY: "C", SCENE: "C", SEEN: "C", SIGHT: "C",
+    // D
+    D: "D", DE: "D", DEE: "D", DI: "D", DA: "D", DEY: "D", THE: "D", DELTA: "D",
+    DOG: "D", TEA: "D", TI: "D", DAY: "D", THEY: "D", DEED: "D",
+    // E
+    E: "E", EE: "E", EA: "E", YE: "E", YEE: "E", YI: "E", ECHO: "E", ELEPHANT: "E",
+    EGG: "E", HE: "E", EASY: "E",
+    // F
+    F: "F", EF: "F", EFF: "F", AF: "F", EP: "F", AP: "F", EPH: "F", FOXTROT: "F",
+    FISH: "F", FAN: "F", APP: "F", IF: "F", IFF: "F", OFF: "F", HALF: "F", FOX: "F",
+    // G
+    G: "G", GE: "G", GEE: "G", GI: "G", JI: "G", JEE: "G", JE: "G", GOLF: "G",
+    GUN: "G", GIRL: "G", ZEE: "G",
+    // H
+    H: "H", AITCH: "H", ETCH: "H", HETCH: "H", ACH: "H", ATCH: "H", HOTEL: "H", HEN: "H",
+    HUT: "H", EDGE: "H", AGE: "H", EACH: "H", ITCH: "H", ACHE: "H", HATCH: "H",
+    // I
+    I: "I", AI: "I", AY: "I", EYE: "I", AYE: "I", HYE: "I", INDIA: "I", ICE: "I",
+    INK: "I", HIGH: "I", HI: "I"
   };
+
+  const LETTER_MAP_SLOT3 = Object.assign({}, LETTER_MAP_SLOT1, {
+    // J
+    J: "J", JE: "J", JAY: "J", JAI: "J", JEI: "J", JULIET: "J", JOY: "J", JUG: "J", JACK: "J",
+    // K
+    K: "K", KE: "K", KAY: "K", CAY: "K", KILO: "K", KING: "K", KITE: "K", OKAY: "K", CARE: "K",
+    // L
+    L: "L", EL: "L", ELL: "L", AL: "L", ALE: "L", LIMA: "L", LION: "L", OIL: "L", AIL: "L", WELL: "L", HELL: "L"
+  });
+
+  const FRONT_REGEX = /^(FRONT|FRONTS|FRONTT|FRNT|FONT|FONTS|FROND|FRONDS|FRO|PRINT|PRINTS|PRNT|PLANT|PLANTS|FLONT|FROUNT|FRAUNT|FRUNT|FRENT|FRIEND|FRIENDS|FRONTED|FRONTLINE|PRONT|PRONTO|POINT|POINTS|FOREFRONT|FRONTSIDE|FRONT-SIDE|TAUNT|RUND|RUN|TRUNK|FRANK|PROMPT|PHRONT)$/i;
+
+  const BACK_REGEX = /^(BACK|BACKS|PACK|PACKS|BAG|BAGS|BAK|BECK|BACKED|BLACK|BAKED|BAKE|BANK|BANKS|BAT|BATS|BAD|PEK|PAC|BAC|BACC|BAKK|BACKSIDE|BACK-SIDE|BAX|BEG|BEGS|BEGG|BOOK|BOOKS|BIKE|BIKES|PAG|BEAK|BARK|BARKS|BUCK|BUCKS|BUG|BUGS)$/i;
+
+  // Fused words and common speech-to-text contractions
+  const FUSED_WORDS = {
+    BEFORE: ["B", "4"],
+    B4: ["B", "4"],
+    ANYONE: ["E", "1"],
+    EVERYONE: ["E", "1"],
+    DEFINE: ["D", "5"],
+    DETAIL: ["D", "12"],
+    A1: ["A", "1"], A2: ["A", "2"], A3: ["A", "3"], A4: ["A", "4"], A5: ["A", "5"],
+    B1: ["B", "1"], B2: ["B", "2"], B3: ["B", "3"], B5: ["B", "5"],
+    C1: ["C", "1"], C2: ["C", "2"], C3: ["C", "3"], C4: ["C", "4"], C5: ["C", "5"],
+    D1: ["D", "1"], D2: ["D", "2"], D3: ["D", "3"], D4: ["D", "4"], D5: ["D", "5"],
+    E1: ["E", "1"], E2: ["E", "2"], E3: ["E", "3"], E4: ["E", "4"], E5: ["E", "5"],
+    F1: ["F", "1"], F2: ["F", "2"], F3: ["F", "3"], F4: ["F", "4"], F5: ["F", "5"],
+    G1: ["G", "1"], G2: ["G", "2"], G3: ["G", "3"], G4: ["G", "4"], G5: ["G", "5"],
+    H1: ["H", "1"], H2: ["H", "2"], H3: ["H", "3"], H4: ["H", "4"], H5: ["H", "5"],
+    I1: ["I", "1"], I2: ["I", "2"], I3: ["I", "3"], I4: ["I", "4"], I5: ["I", "5"],
+    J1: ["J", "1"], J2: ["J", "2"], J3: ["J", "3"],
+    K1: ["K", "1"], K2: ["K", "2"], K3: ["K", "3"],
+    L1: ["L", "1"], L2: ["L", "2"], L3: ["L", "3"],
+    SEEONE: ["C", "1"], SEETWO: ["C", "2"], SEETHREE: ["C", "3"], SEEFOUR: ["C", "4"], SEEFIVE: ["C", "5"],
+    DEEONE: ["D", "1"], DEETWO: ["D", "2"], DEETHREE: ["D", "3"], DEEFOUR: ["D", "4"], DEEFIVE: ["D", "5"],
+    EFFONE: ["F", "1"], EFFTWO: ["F", "2"], EFFTHREE: ["F", "3"], EFFFOUR: ["F", "4"], EFFFIVE: ["F", "5"]
+  };
+
+  const FILLER_WORDS_REGEX = /\b(DASH|HYPHEN|MINUS|NUMBER|NO|DIGIT|LETTER|CODE|SLOT|PLEASE)\b/gi;
 
   function parseNumber(tok) {
+    if (!tok) return null;
     if (/^\d+$/.test(tok)) return parseInt(tok, 10);
     const u = tok.toUpperCase();
     return NUM_WORDS[u] !== undefined ? NUM_WORDS[u] : null;
@@ -258,30 +356,51 @@
   function parseTokens(raw) {
     if (!raw) return [];
     const separated = raw
+      .replace(FILLER_WORDS_REGEX, " ")
       .replace(/([a-zA-Z]+)(\d+)/g, "$1 $2")
       .replace(/(\d+)([a-zA-Z]+)/g, "$1 $2")
       .replace(/[^a-zA-Z0-9]+/g, " ")
       .trim();
     if (!separated) return [];
-    const rawTokens = separated.split(/\s+/).map(function (t) {
+    const initial = separated.split(/\s+/).map(function (t) {
       return t.toUpperCase();
     });
 
-    const tokens = [];
-    for (let i = 0; i < rawTokens.length; i++) {
-      const cur = rawTokens[i];
-      const next = rawTokens[i + 1];
-      if (
-        (cur === "TWENTY" || cur === "THIRTY" || cur === "FORTY" || cur === "FIFTY") &&
-        next &&
-        NUM_WORDS[next] &&
-        NUM_WORDS[next] < 10
-      ) {
-        tokens.push(String(NUM_WORDS[cur] + NUM_WORDS[next]));
-        i++;
+    // Expand fused words
+    const expanded = [];
+    for (let i = 0; i < initial.length; i++) {
+      const tok = initial[i];
+      if (FUSED_WORDS[tok]) {
+        for (let j = 0; j < FUSED_WORDS[tok].length; j++) {
+          expanded.push(FUSED_WORDS[tok][j]);
+        }
       } else {
-        tokens.push(cur);
+        expanded.push(tok);
       }
+    }
+
+    // Combine compound numbers (e.g. 20 1, TWENTY ONE, TWENTY 5, 30 2, etc.)
+    const tokens = [];
+    for (let i = 0; i < expanded.length; i++) {
+      const cur = expanded[i];
+      const next = expanded[i + 1];
+
+      let tensVal = null;
+      if (cur === "TWENTY" || cur === "TWENTI" || cur === "20") tensVal = 20;
+      else if (cur === "THIRTY" || cur === "THIRTI" || cur === "30") tensVal = 30;
+      else if (cur === "FORTY" || cur === "FOURTY" || cur === "FORTI" || cur === "40") tensVal = 40;
+      else if (cur === "FIFTY" || cur === "FIFTI" || cur === "50") tensVal = 50;
+
+      if (tensVal !== null && next !== undefined) {
+        let unitVal = parseNumber(next);
+        if (unitVal !== null && unitVal >= 1 && unitVal <= 9 && tensVal + unitVal <= 55) {
+          tokens.push(String(tensVal + unitVal));
+          i++;
+          continue;
+        }
+      }
+
+      tokens.push(cur);
     }
     return tokens;
   }
@@ -292,74 +411,112 @@
       .toUpperCase()
       .replace(/[^A-Z0-9-]/g, "") || "MRTN";
 
-    const tokens = parseTokens(rawCommand);
-    if (tokens.length === 0) return { text: cleanPrefix, isValid: false };
+    const rawTokens = parseTokens(rawCommand);
+    if (rawTokens.length === 0) return { text: cleanPrefix, isValid: false, score: 0 };
 
-    let startIdx = 0;
-    if (tokens[0] === cleanPrefix) startIdx = 1;
-    const remaining = tokens.slice(startIdx);
-    if (remaining.length === 0) return { text: cleanPrefix, isValid: false };
+    // 1. Strip Prefix if present
+    let tokens = rawTokens.slice();
+
+    // Check if initial tokens concatenate to cleanPrefix (e.g. ['MR', 'TN'] -> 'MRTN', or ['M', 'R', 'T', 'N'] -> 'MRTN')
+    let prefixStripped = false;
+    for (let len = Math.min(tokens.length, cleanPrefix.length); len >= 1; len--) {
+      const combined = tokens.slice(0, len).join("");
+      if (combined === cleanPrefix) {
+        tokens = tokens.slice(len);
+        prefixStripped = true;
+        break;
+      }
+    }
+
+    if (!prefixStripped && tokens.length > 0) {
+      const first = tokens[0];
+      if (
+        cleanPrefix === "MRTN" &&
+        /^(MARTIN|MARTEN|MARTIAN|MERTEN|MODERN|MORTEN|MARTAN)$/.test(first)
+      ) {
+        tokens = tokens.slice(1);
+      }
+    }
+
+    // 2. Extract Slot 5 (FRONT / BACK) from ANYWHERE in the phrase
+    let slot5 = null;
+    const filteredTokens = [];
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (!slot5 && FRONT_REGEX.test(t)) {
+        slot5 = "FRONT";
+      } else if (!slot5 && BACK_REGEX.test(t)) {
+        slot5 = "BACK";
+      } else {
+        filteredTokens.push(t);
+      }
+    }
 
     let slot1 = null;
     let slot2 = null;
     let slot3 = null;
     let slot4 = null;
-    let slot5 = null;
 
     let idx = 0;
 
-    // Slot 1: A-I
-    if (idx < remaining.length) {
-      const t = remaining[idx];
-      const letter = LETTER_MAP[t] || (t.length === 1 && t >= "A" && t <= "I" ? t : null);
+    // 3. Slot 1: Must be A-I
+    if (idx < filteredTokens.length) {
+      const t = filteredTokens[idx];
+      const letter =
+        LETTER_MAP_SLOT1[t] ||
+        (t.length === 1 && t >= "A" && t <= "I" ? t : null);
       if (letter && letter >= "A" && letter <= "I") {
         slot1 = letter;
         idx++;
       }
     }
 
-    // Slot 2: 1-55
-    if (idx < remaining.length) {
-      const num = parseNumber(remaining[idx]);
-      if (num !== null && num >= 1 && num <= 55) {
-        slot2 = num;
+    // 4. Slot 2: Must be 1-55
+    if (idx < filteredTokens.length) {
+      const t1 = filteredTokens[idx];
+      const n1 = parseNumber(t1);
+
+      // Check if next two tokens are individual digits forming 10-55 (e.g. "two five" -> 25)
+      if (idx + 1 < filteredTokens.length) {
+        const t2 = filteredTokens[idx + 1];
+        const n2 = parseNumber(t2);
+        if (n1 !== null && n2 !== null && n1 >= 1 && n1 <= 5 && n2 >= 0 && n2 <= 9) {
+          const combined = n1 * 10 + n2;
+          if (combined <= 55) {
+            slot2 = combined;
+            idx += 2;
+          }
+        }
+      }
+
+      if (slot2 === null && n1 !== null && n1 >= 1 && n1 <= 55) {
+        slot2 = n1;
         idx++;
       }
     }
 
-    // Slot 5: FRONT / BACK
-    for (let j = idx; j < remaining.length; j++) {
-      const t = remaining[j];
-      if (/^(FRONT|PRINT|FRNT|FONT|FROND|FRO|FRONTS)$/.test(t)) {
-        slot5 = "FRONT";
-        remaining.splice(j, 1);
-        break;
-      } else if (/^(BACK|PACK|BAG|BAK|BECK|BACKED|BLACK)$/.test(t)) {
-        slot5 = "BACK";
-        remaining.splice(j, 1);
-        break;
-      }
-    }
-
-    // Slot 3 (optional): A-L
-    if (idx < remaining.length) {
-      const t = remaining[idx];
-      const letter = LETTER_MAP[t] || (t.length === 1 && t >= "A" && t <= "L" ? t : null);
+    // 5. Slot 3 (optional): A-L
+    if (idx < filteredTokens.length) {
+      const t = filteredTokens[idx];
+      const letter =
+        LETTER_MAP_SLOT3[t] ||
+        (t.length === 1 && t >= "A" && t <= "L" ? t : null);
       if (letter && letter >= "A" && letter <= "L") {
         slot3 = letter;
         idx++;
       }
     }
 
-    // Slot 4 (optional): 1-7
-    if (idx < remaining.length) {
-      const num = parseNumber(remaining[idx]);
+    // 6. Slot 4 (optional, only if slot3 exists): 1-7
+    if (slot3 !== null && idx < filteredTokens.length) {
+      const num = parseNumber(filteredTokens[idx]);
       if (num !== null && num >= 1 && num <= 7) {
         slot4 = num;
         idx++;
       }
     }
 
+    // Calculate matching score and validity
     if (slot1 !== null && slot2 !== null) {
       const parts = [cleanPrefix, slot1, slot2];
       if (slot3 !== null && slot4 !== null) {
@@ -370,28 +527,49 @@
       if (slot5 !== null) {
         parts.push(slot5);
       }
-      return { text: parts.join("-"), isValid: true };
+
+      const unconsumedTokens = filteredTokens.length - idx;
+      const score =
+        1000 +
+        (slot3 ? 100 : 0) +
+        (slot4 ? 50 : 0) +
+        (slot5 ? 50 : 0) -
+        unconsumedTokens * 30;
+      return { text: parts.join("-"), isValid: true, score: score };
     }
 
-    const fallbackTokens = remaining.map(function (t) {
-      if (/^(FRONT|PRINT|FRNT|FONT|FROND|FRO|FRONTS)$/.test(t)) return "FRONT";
-      if (/^(BACK|PACK|BAG|BAK|BECK|BACKED|BLACK)$/.test(t)) return "BACK";
-      if (LETTER_MAP[t]) return LETTER_MAP[t];
-      const n = parseNumber(t);
-      return n !== null ? String(n) : t;
+    // Fallback if pattern is invalid
+    const fallbackParts = [cleanPrefix];
+    filteredTokens.forEach(function (t) {
+      if (LETTER_MAP_SLOT1[t]) fallbackParts.push(LETTER_MAP_SLOT1[t]);
+      else {
+        const n = parseNumber(t);
+        fallbackParts.push(n !== null ? String(n) : t);
+      }
     });
-    return { text: cleanPrefix + "-" + fallbackTokens.join("-"), isValid: false };
+    if (slot5) fallbackParts.push(slot5);
+
+    return { text: fallbackParts.join("-"), isValid: false, score: 0 };
   }
 
   // =========================================================================
   // 3. APP STATE & ELEMENT REFERENCES
   // =========================================================================
+  const STORAGE_KEY_LANG = "voice_qr_speech_lang";
+
   let state = {
     formatCode: "MRTN",
     lastCommand: "E 1 F 2 front",
     formattedPayload: "MRTN-E-1-F-2-FRONT",
     sourceMode: "voice", // "voice" | "raw"
     formatRulesEnabled: true,
+    speechLang: (function () {
+      try {
+        return localStorage.getItem(STORAGE_KEY_LANG) || "en-IN";
+      } catch (e) {
+        return "en-IN";
+      }
+    })(),
     isListening: false,
     isEditing: false,
     isScanning: false,
@@ -401,6 +579,8 @@
   const mobileShell = document.querySelector(".mobile-shell");
   const topFormatBox = document.getElementById("topFormatBox");
   const topFormatInput = document.getElementById("topFormatInput");
+  const langToggleBtn = document.getElementById("langToggleBtn");
+  const langIconHolder = document.getElementById("langIconHolder");
   const themeToggleBtn = document.getElementById("themeToggleBtn");
   const themeIconHolder = document.getElementById("themeIconHolder");
   const formatModeToggleBtn = document.getElementById("formatModeToggleBtn");
@@ -763,8 +943,39 @@
   });
 
   // =========================================================================
-  // 9. FORMAT RULES TOGGLE (Default: ON / Off: Exact Verbatim Voice Command)
+  // 9. SPEECH LANGUAGE & FORMAT RULES TOGGLE
   // =========================================================================
+  function updateLanguageUI() {
+    if (!langToggleBtn || !langIconHolder) return;
+    const isIndian = state.speechLang === "en-IN";
+    langIconHolder.textContent = isIndian ? "IN" : "US";
+    langToggleBtn.title = isIndian
+      ? "Speech Language: English (India) [en-IN] / Tap for US"
+      : "Speech Language: English (US) [en-US] / Tap for India";
+    langToggleBtn.setAttribute(
+      "aria-label",
+      isIndian
+        ? "Current speech language English (India). Click to toggle to English (US)."
+        : "Current speech language English (US). Click to toggle to English (India)."
+    );
+  }
+
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener("click", function () {
+      abortListeningIfActive();
+      state.speechLang = state.speechLang === "en-IN" ? "en-US" : "en-IN";
+      try {
+        localStorage.setItem(STORAGE_KEY_LANG, state.speechLang);
+      } catch (e) {}
+      updateLanguageUI();
+      showToast(
+        state.speechLang === "en-IN"
+          ? "Speech Engine: English (India) - en-IN"
+          : "Speech Engine: English (US) - en-US"
+      );
+    });
+  }
+
   function updateFormatRuleUI() {
     if (state.formatRulesEnabled) {
       formatModeToggleBtn.classList.add("active-rule");
@@ -1092,21 +1303,69 @@
       recognition = new SpeechRecognition();
     }
 
-    // Hardware initialization: continuous=false, interimResults=false, maxAlternatives=1
+    // Hardware initialization: continuous=false, interimResults=false, maxAlternatives=10
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.lang = "en-US";
+    recognition.maxAlternatives = 10;
+    recognition.lang = state.speechLang || "en-IN";
+
+    const SpeechGrammarList =
+      window.SpeechGrammarList || window.webkitSpeechGrammarList || null;
+    if (SpeechGrammarList && state.formatRulesEnabled) {
+      try {
+        const grammarList = new SpeechGrammarList();
+        const grammarRules =
+          "#JSGF V1.0; grammar qrCode; public <qr> = [MRTN | martin] (A | B | C | D | E | F | G | H | I) (1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55) [A | B | C | D | E | F | G | H | I | J | K | L] [1 | 2 | 3 | 4 | 5 | 6 | 7] [FRONT | BACK];";
+        grammarList.addFromString(grammarRules, 1);
+        recognition.grammars = grammarList;
+      } catch (e) {}
+    }
 
     recognition.onresult = function (event) {
-      let transcript = "";
-      if (
-        event.results &&
-        event.results.length > 0 &&
-        event.results[0] &&
-        event.results[0][0]
-      ) {
-        transcript = event.results[0][0].transcript.trim();
+      let selectedTranscript = "";
+      let bestParsed = null;
+      let bestScore = -Infinity;
+
+      if (event.results && event.results.length > 0 && event.results[0]) {
+        const alts = event.results[0];
+
+        if (!state.formatRulesEnabled) {
+          // Exact speech mode: take primary verbatim transcript
+          selectedTranscript =
+            alts[0] && alts[0].transcript ? alts[0].transcript.trim() : "";
+          bestParsed = { text: selectedTranscript, isValid: true, score: 100 };
+        } else {
+          // Smart format rules mode: rank all alternatives and select best match
+          for (let i = 0; i < alts.length; i++) {
+            const alt = alts[i];
+            const trans = (alt.transcript || "").trim();
+            if (!trans) continue;
+
+            const parsed = formatVoiceCommandWithLimitations(
+              state.formatCode,
+              trans
+            );
+            let score = parsed.score;
+            if (parsed.isValid) {
+              score += 500 + (alt.confidence || 0.5) * 50;
+            } else {
+              score += (alt.confidence || 0.5) * 10;
+            }
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestParsed = parsed;
+              selectedTranscript = trans;
+            }
+          }
+        }
+      }
+
+      if (!bestParsed && selectedTranscript) {
+        bestParsed = formatVoiceCommandWithLimitations(
+          state.formatCode,
+          selectedTranscript
+        );
       }
 
       // Immediately execute recognition.stop() to close audio tracks instantly
@@ -1116,22 +1375,19 @@
 
       state.isListening = false;
 
-      if (transcript) {
+      if (bestParsed && selectedTranscript) {
         state.sourceMode = "voice";
-        state.lastCommand = transcript;
+        state.lastCommand = selectedTranscript;
 
-        let isPatternValid = true;
+        const isPatternValid = bestParsed.isValid;
+        state.formattedPayload = bestParsed.text;
+
         if (state.formatRulesEnabled) {
-          const parseResult = formatVoiceCommandWithLimitations(
-            state.formatCode,
-            transcript
-          );
-          state.formattedPayload = parseResult.text;
-          isPatternValid = parseResult.isValid;
-          spokenTranscriptDisplay.textContent = 'Voice command: "' + transcript + '"';
+          spokenTranscriptDisplay.textContent =
+            'Voice command: "' + selectedTranscript + '"';
         } else {
-          state.formattedPayload = transcript;
-          spokenTranscriptDisplay.textContent = 'Exact speech: "' + transcript + '"';
+          spokenTranscriptDisplay.textContent =
+            'Exact speech: "' + selectedTranscript + '"';
         }
 
         formattedCodeDisplay.textContent = state.formattedPayload;
@@ -1203,6 +1459,7 @@
 
   // Initialize App on Load
   applyTheme();
+  updateLanguageUI();
   updateFormatRuleUI();
   initHistory();
   updateQRFromState();
