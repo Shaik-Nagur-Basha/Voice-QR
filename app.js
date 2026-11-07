@@ -556,11 +556,13 @@
   // 3. APP STATE & ELEMENT REFERENCES
   // =========================================================================
   const STORAGE_KEY_LANG = "voice_qr_speech_lang";
+  const DEFAULT_CODE = "MRTN-E-1-F-2-FRONT";
+  const DEFAULT_COMMAND = "E 1 F 2 front";
 
   let state = {
     formatCode: "MRTN",
-    lastCommand: "E 1 F 2 front",
-    formattedPayload: "MRTN-E-1-F-2-FRONT",
+    lastCommand: DEFAULT_COMMAND,
+    formattedPayload: DEFAULT_CODE,
     sourceMode: "voice", // "voice" | "raw"
     formatRulesEnabled: true,
     speechLang: (function () {
@@ -681,13 +683,19 @@
     newCode = newCode.trim();
     if (!newCode) return;
 
+    // Requirement 3: Remove the default code after at least one code persists in local storage
+    historyList = historyList.filter(function (code) {
+      return code !== DEFAULT_CODE;
+    });
+
     // If identical to current active code, do not add duplicate
     if (historyList.length > 0 && historyList[historyIndex] === newCode) {
+      saveHistoryState();
       return;
     }
 
     // When new code is added, drop any forward codes ahead of current position
-    if (historyIndex < historyList.length - 1) {
+    if (historyIndex >= 0 && historyIndex < historyList.length - 1) {
       historyList = historyList.slice(0, historyIndex + 1);
     }
 
@@ -723,27 +731,44 @@
   }
 
   function initHistory() {
+    let hasLoadedPersisted = false;
     try {
       const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
       const rawIdx = localStorage.getItem(STORAGE_KEY_INDEX);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          historyList = parsed.slice(0, 11);
-          let idx = parseInt(rawIdx, 10);
-          if (isNaN(idx) || idx < 0 || idx >= historyList.length) {
-            idx = historyList.length - 1;
+          let cleaned = parsed.filter(function (c) {
+            return typeof c === "string" && c.trim().length > 0;
+          });
+          // If there are other codes persisted besides the default code, remove the default code
+          if (cleaned.length > 1) {
+            cleaned = cleaned.filter(function (c) {
+              return c !== DEFAULT_CODE;
+            });
           }
-          historyIndex = idx;
-          state.formattedPayload = historyList[historyIndex];
+          if (cleaned.length > 0 && !(cleaned.length === 1 && cleaned[0] === DEFAULT_CODE)) {
+            historyList = cleaned.slice(0, 11);
+            let idx = parseInt(rawIdx, 10);
+            if (isNaN(idx) || idx < 0 || idx >= historyList.length) {
+              idx = historyList.length - 1;
+            }
+            historyIndex = idx;
+            state.formattedPayload = historyList[historyIndex];
+            state.sourceMode = "raw";
+            hasLoadedPersisted = true;
+          }
         }
       }
     } catch (e) {}
 
-    if (historyList.length === 0) {
-      historyList = [state.formattedPayload || "MRTN-E-1-F-2-FRONT"];
+    if (!hasLoadedPersisted) {
+      historyList = [DEFAULT_CODE];
       historyIndex = 0;
+      state.formattedPayload = DEFAULT_CODE;
+    } else {
       saveHistoryState();
+      spokenTranscriptDisplay.textContent = 'Saved code: "' + state.formattedPayload + '"';
     }
     updateHistoryUI();
   }
